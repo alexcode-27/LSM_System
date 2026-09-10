@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>LSM System - Rankings Irapuato</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; background: #0d1117; color: #e6edf3; }
+    h1 { font-size: 1.4rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #30363d; }
+    th { cursor: pointer; color: #58a6ff; }
+    select { background: #161b22; color: #e6edf3; padding: 0.3rem; border: 1px solid #30363d; }
+  </style>
+</head>
+<body>
+  <h1>LSM System — Rankings (Club Irapuato)</h1>
+
+  <label>
+    Ordenar por:
+    <select id="criteria">
+      <option value="goals">Goles</option>
+      <option value="goals_per_match">Goles por partido</option>
+      <option value="minutes_played">Minutos jugados</option>
+      <option value="minutes_percentage">% de minutos</option>
+      <option value="starts">Titularidades</option>
+    </select>
+  </label>
+
+  <table id="rankings-table">
+    <thead>
+      <tr>
+        <th>Jugador</th><th>Posición</th><th>Categoría</th>
+        <th>PJ</th><th>Goles</th><th>Goles/PJ</th>
+        <th>Min.</th><th>% Min.</th><th>Titular.</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const API_BASE = "http://localhost:8000/api/rankings";
+    const tbody = document.querySelector("#rankings-table tbody");
+    const criteriaSelect = document.getElementById("criteria");
+
+    async function loadRankings() {
+      const criteria = criteriaSelect.value;
+      const res = await fetch(`${API_BASE}?criteria=${criteria}`);
+      const data = await res.json();
+      tbody.innerHTML = "";
+      data.forEach(p => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${p.full_name}</td>
+          <td>${p.position ?? "-"}</td>
+          <td>${p.category ?? "-"}</td>
+          <td>${p.matches_played}</td>
+          <td>${p.goals}</td>
+          <td>${p.goals_per_match}</td>
+          <td>${p.minutes_played}</td>
+          <td>${p.minutes_percentage}%</td>
+          <td>${p.starts}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    criteriaSelect.addEventListener("change", loadRankings);
+    loadRankings();
+  </script>
+</body>
+</html>

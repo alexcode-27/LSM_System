@@ -66,7 +66,7 @@ def seed_j1(db):
         ("Villaseñor Gael Ronaldo", "Medio", 81, 0),     # salió min 81
         ("Martínez Francisco", "Medio", 72, 0),          # salió min 72
         ("Arriaga Johan Moisés", None, 18, 0),           # entró min 72 (90-72)
-        ("Barrientos José Manuel", None, 9, 0),          # entró min 81 (90-81)
+        ("Barrientos José Manuel", "Medio", 9, 0),       # entró min 81 (90-81)
         ("Collazo Angel Gabriel", "Delantero", 18, 1),   # entró min 72, gol min 90+4
     ]
 
@@ -145,14 +145,128 @@ def seed_j2(db):
         db.add(appearance)
 
 
+def seed_j3(db):
+    """
+    J-3: Club Deportivo Irapuato 2-1 Tigres de Álica FC
+    Sábado 12 de septiembre de 2026, Estadio Sergio León Chávez.
+    Fuente: informe arbitral oficial FMF (Torneo Liga 2026, Jornada 3).
+    """
+    match = Match(
+        season="2026-2027",
+        competition="Liga BBVA Expansión MX",
+        match_date=date(2026, 9, 12),
+        opponent="Tigres de Álica FC",
+    )
+    db.add(match)
+    db.flush()
+
+    appearances_data = [
+        ("Padrón Romeo Sebastián", "Portero", 90, 0),
+        ("Morales Alejandro", "Defensa", 90, 0),
+        ("Flores Rolando Daniel", "Defensa", 90, 0),
+        ("Pérez Axel Oswaldo", "Medio", 90, 0),
+        ("García Tito Ian", "Defensa", 90, 0),             # amarilla min 30
+        ("Sánchez Noé de Jesús", "Defensa", 90, 0),         # capitán
+        ("Martínez Francisco", "Medio", 79, 0),             # salió min 79
+        ("Hernández Arturo Daniel", "Delantero", 55, 1),    # salió min 55, gol min 40
+        ("Villaseñor Gael Ronaldo", "Medio", 55, 0),        # salió min 55
+        ("De La Rosa Heriberto", "Delantero", 79, 1),       # salió min 79, gol min 20
+        ("Araujo Luis Ángel", "Medio", 64, 0),              # salió min 64
+        ("Barrientos José Manuel", "Medio", 35, 0),         # entró min 55 (90-55)
+        ("Collazo Angel Gabriel", "Delantero", 35, 0),      # entró min 55, amarilla min 90
+        ("Alatorre Jacobo", None, 26, 0),                   # entró min 64 (90-64)
+        ("Montejano Emanuel", None, 11, 0),                 # entró min 79 (90-79)
+        ("Arcila Jehan Nycolas", None, 11, 0),               # entró min 79 (90-79)
+    ]
+
+    starters = {
+        "Padrón Romeo Sebastián", "Morales Alejandro", "Flores Rolando Daniel",
+        "Pérez Axel Oswaldo", "García Tito Ian", "Sánchez Noé de Jesús",
+        "Martínez Francisco", "Hernández Arturo Daniel", "Villaseñor Gael Ronaldo",
+        "De La Rosa Heriberto", "Araujo Luis Ángel",
+    }
+
+    for full_name, position, minutes, goals in appearances_data:
+        player = get_or_create_player(db, full_name, position=position)
+        appearance = Appearance(
+            player_id=player.id,
+            match_id=match.id,
+            minutes_played=minutes,
+            started=full_name in starters,
+            goals=goals,
+        )
+        db.add(appearance)
+
+
+def seed_j4(db):
+    """
+    J-4: Reboceros de La Piedad 2-3 Club Deportivo Irapuato
+    Lunes 21 de septiembre de 2026, Estadio Juan N. López, La Piedad, Mich.
+    Fuente: informe arbitral oficial FMF (Torneo Liga 2026, Jornada 4).
+
+    El informe arbitral lista 4 "G" para jugadores de Irapuato, pero el
+    marcador oficial solo acredita 3. Confirmado contra el detalle de goles
+    de Liga BBVA Expansión MX: el gol de Barrientos José Manuel (min 64) fue
+    autogol — cuenta para Reboceros, no para las estadísticas de Barrientos.
+    Por eso su appearance queda con goals=0 aunque jugó esos minutos.
+    """
+    match = Match(
+        season="2026-2027",
+        competition="Liga BBVA Expansión MX",
+        match_date=date(2026, 9, 21),
+        opponent="Reboceros de La Piedad",
+    )
+    db.add(match)
+    db.flush()
+
+    appearances_data = [
+        ("Flores Rolando Daniel", "Defensa", 90, 0),
+        ("Pérez Axel Oswaldo", "Medio", 90, 0),
+        ("Nava Luis Joshua", "Portero", 90, 0),
+        ("García Tito Ian", "Defensa", 90, 0),
+        ("Sánchez Noé de Jesús", "Defensa", 90, 0),          # capitán, amarilla min 18
+        ("Martínez Francisco", "Medio", 90, 1),              # gol min 61
+        ("Morales Alejandro", "Defensa", 45, 0),             # salió min 45
+        ("Villaseñor Gael Ronaldo", "Medio", 45, 0),         # salió min 45
+        ("Hernández Arturo Daniel", "Delantero", 45, 1),     # salió min 45, gol min 3
+        ("De La Rosa Heriberto", "Delantero", 55, 1),        # salió min 55, gol min 54
+        ("Araujo Luis Ángel", "Medio", 79, 0),               # salió min 79
+        ("Aranda Juan Jesús", None, 45, 0),                  # entró min 45, amarilla min 86
+        ("Arcila Jehan Nycolas", None, 45, 0),                # entró min 45 (90-45)
+        ("Barrientos José Manuel", "Medio", 45, 0),          # entró min 45; autogol min 64, no cuenta como gol propio
+        ("Sandoval Erick David", None, 35, 0),                # entró min 55 (90-55)
+        ("Collazo Angel Gabriel", "Delantero", 11, 0),        # entró min 79 (90-79)
+    ]
+
+    starters = {
+        "Flores Rolando Daniel", "Pérez Axel Oswaldo", "Nava Luis Joshua",
+        "García Tito Ian", "Sánchez Noé de Jesús", "Martínez Francisco",
+        "Morales Alejandro", "Villaseñor Gael Ronaldo", "Hernández Arturo Daniel",
+        "De La Rosa Heriberto", "Araujo Luis Ángel",
+    }
+
+    for full_name, position, minutes, goals in appearances_data:
+        player = get_or_create_player(db, full_name, position=position)
+        appearance = Appearance(
+            player_id=player.id,
+            match_id=match.id,
+            minutes_played=minutes,
+            started=full_name in starters,
+            goals=goals,
+        )
+        db.add(appearance)
+
+
 def main():
     init_db()
     db = SessionLocal()
     try:
         seed_j1(db)
         seed_j2(db)
+        seed_j3(db)
+        seed_j4(db)
         db.commit()
-        print("Carga completa: J-1 y J-2 cargados con datos reales del informe arbitral FMF.")
+        print("Carga completa: J-1, J-2, J-3 y J-4 cargados con datos reales verificados del informe arbitral FMF.")
     except Exception:
         db.rollback()
         raise

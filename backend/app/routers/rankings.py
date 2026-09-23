@@ -34,6 +34,7 @@ def get_rankings(
         db.query(
             Player.id.label("player_id"),
             Player.full_name,
+            Player.jersey_number,
             Player.position,
             Player.category,
             func.count(Appearance.id).label("matches_played"),
@@ -63,6 +64,7 @@ def get_rankings(
             RankingEntry(
                 player_id=r.player_id,
                 full_name=r.full_name,
+                jersey_number=r.jersey_number,
                 position=r.position,
                 category=r.category,
                 matches_played=r.matches_played,

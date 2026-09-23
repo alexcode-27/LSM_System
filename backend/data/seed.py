@@ -23,12 +23,42 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.database import SessionLocal, init_db
 from app.models import Player, Match, Appearance
 
+# Números de camiseta confirmados en los informes arbitrales oficiales
+# (J-1 a J-4). Solo se incluyen jugadores que efectivamente jugaron minutos.
+JERSEY_NUMBERS = {
+    "Padrón Romeo Sebastián": 1,
+    "Morales Alejandro": 2,
+    "Flores Rolando Daniel": 4,
+    "Pérez Axel Oswaldo": 5,
+    "Arriaga Johan Moisés": 6,
+    "Montejano Emanuel": 7,
+    "Sandoval Erick David": 9,
+    "Martínez Francisco": 10,
+    "Alatorre Jacobo": 11,
+    "Barrientos José Manuel": 13,
+    "Hernández Arturo Daniel": 14,
+    "Villaseñor Gael Ronaldo": 15,
+    "Nava Luis Joshua": 16,
+    "García Tito Ian": 17,
+    "Collazo Angel Gabriel": 19,
+    "De La Rosa Heriberto": 21,
+    "Sánchez Noé de Jesús": 23,
+    "Aranda Juan Jesús": 31,
+    "Arcila Jehan Nycolas": 44,
+    "Araujo Luis Ángel": 50,
+}
+
 
 def get_or_create_player(db, full_name, position=None, category="Primer equipo"):
     player = db.query(Player).filter(Player.full_name == full_name).first()
     if player:
         return player
-    player = Player(full_name=full_name, position=position, category=category)
+    player = Player(
+        full_name=full_name,
+        jersey_number=JERSEY_NUMBERS.get(full_name),
+        position=position,
+        category=category,
+    )
     db.add(player)
     db.flush()  # para tener player.id sin hacer commit todavía
     return player

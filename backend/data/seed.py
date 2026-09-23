@@ -1,0 +1,164 @@
+"""
+Script de carga (seed) para LSM System v1.
+
+Carga solo Club Deportivo Irapuato. No se guardan datos del rival:
+el modelo Player no distingue equipo porque v1 solo trackea Irapuato.
+
+Uso:
+    cd backend
+    python -m data.seed
+    (o: python data/seed.py, ajustando el import de arriba según cómo lo corras)
+
+IMPORTANTE: este script es idempotente a medias — si lo corres dos veces
+vas a duplicar jugadores y partidos. Para v1 está bien correrlo una sola
+vez sobre una base limpia. Si necesitas volver a correrlo, borra antes
+backend/data/lsm.db.
+"""
+import sys
+import os
+from datetime import date
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app.database import SessionLocal, init_db
+from app.models import Player, Match, Appearance
+
+
+def get_or_create_player(db, full_name, position=None, category="Primer equipo"):
+    player = db.query(Player).filter(Player.full_name == full_name).first()
+    if player:
+        return player
+    player = Player(full_name=full_name, position=position, category=category)
+    db.add(player)
+    db.flush()  # para tener player.id sin hacer commit todavía
+    return player
+
+
+def seed_j1(db):
+    """
+    J-1: Club Deportivo Irapuato 2-1 Los Cabos United
+    Sábado 29 de agosto de 2026, Estadio Sergio León Chávez.
+    Fuente: informe arbitral oficial FMF (Torneo Liga 2026, Jornada 1).
+    """
+    match = Match(
+        season="2026-2027",
+        competition="Liga BBVA Expansión MX",
+        match_date=date(2026, 8, 29),
+        opponent="Los Cabos United",
+    )
+    db.add(match)
+    db.flush()
+
+    # (nombre completo, posición, minutos, goles)
+    # Posiciones de titulares confirmadas en la página oficial de Liga BBVA
+    # Expansión MX (mismo once que repitió completo en J-2). Posiciones de
+    # suplentes que no aparecen ahí quedan en None a propósito: no inventar.
+    appearances_data = [
+        ("Padrón Romeo Sebastián", "Portero", 90, 0),
+        ("Morales Alejandro", "Defensa", 90, 0),
+        ("Flores Rolando Daniel", "Defensa", 90, 0),
+        ("Pérez Axel Oswaldo", "Medio", 90, 0),
+        ("García Tito Ian", "Defensa", 90, 1),          # gol min 35
+        ("De La Rosa Heriberto", "Delantero", 90, 0),
+        ("Sánchez Noé de Jesús", "Defensa", 90, 0),      # capitán, amarilla min 24
+        ("Araujo Luis Ángel", "Medio", 90, 0),
+        ("Hernández Arturo Daniel", "Delantero", 72, 0), # salió min 72
+        ("Villaseñor Gael Ronaldo", "Medio", 81, 0),     # salió min 81
+        ("Martínez Francisco", "Medio", 72, 0),          # salió min 72
+        ("Arriaga Johan Moisés", None, 18, 0),           # entró min 72 (90-72)
+        ("Barrientos José Manuel", None, 9, 0),          # entró min 81 (90-81)
+        ("Collazo Angel Gabriel", "Delantero", 18, 1),   # entró min 72, gol min 90+4
+    ]
+
+    starters = {
+        "Padrón Romeo Sebastián", "Morales Alejandro", "Flores Rolando Daniel",
+        "Pérez Axel Oswaldo", "García Tito Ian", "De La Rosa Heriberto",
+        "Sánchez Noé de Jesús", "Araujo Luis Ángel", "Hernández Arturo Daniel",
+        "Villaseñor Gael Ronaldo", "Martínez Francisco",
+    }
+
+    for full_name, position, minutes, goals in appearances_data:
+        player = get_or_create_player(db, full_name, position=position)
+        appearance = Appearance(
+            player_id=player.id,
+            match_id=match.id,
+            minutes_played=minutes,
+            started=full_name in starters,
+            goals=goals,
+        )
+        db.add(appearance)
+
+
+def seed_j2(db):
+    """
+    J-2: Cordobes Fútbol Club 0-3 Club Deportivo Irapuato
+    Sábado 5 de septiembre de 2026, Estadio Municipal Los Pinos.
+    Fuente: informe arbitral oficial FMF (Torneo Liga 2026, Jornada 2).
+
+    El once titular es idéntico al de J-1 — mismos 11 jugadores, así que
+    get_or_create_player los reutiliza en vez de duplicarlos.
+    """
+    match = Match(
+        season="2026-2027",
+        competition="Liga BBVA Expansión MX",
+        match_date=date(2026, 9, 5),
+        opponent="Cordobes Fútbol Club",
+    )
+    db.add(match)
+    db.flush()
+
+    appearances_data = [
+        ("Padrón Romeo Sebastián", "Portero", 90, 0),
+        ("Morales Alejandro", "Defensa", 90, 0),
+        ("Flores Rolando Daniel", "Defensa", 90, 0),
+        ("Pérez Axel Oswaldo", "Medio", 90, 0),
+        ("García Tito Ian", "Defensa", 90, 0),            # amarilla min 69
+        ("Sánchez Noé de Jesús", "Defensa", 90, 1),        # capitán, gol min 76
+        ("Villaseñor Gael Ronaldo", "Medio", 45, 0),       # salió min 45
+        ("Martínez Francisco", "Medio", 58, 0),            # salió min 58
+        ("Hernández Arturo Daniel", "Delantero", 73, 1),   # salió min 73, gol min 13
+        ("Araujo Luis Ángel", "Medio", 73, 0),             # salió min 73
+        ("De La Rosa Heriberto", "Delantero", 83, 1),      # salió min 83, gol min 23
+        ("Arcila Jehan Nycolas", None, 45, 0),             # entró min 45 (90-45)
+        ("Barrientos José Manuel", None, 32, 0),           # entró min 58 (90-58)
+        ("Montejano Emanuel", None, 17, 0),                # entró min 73 (90-73)
+        ("Alatorre Jacobo", None, 17, 0),                  # entró min 73 (90-73)
+        ("Sandoval Erick David", None, 7, 0),              # entró min 83 (90-83)
+    ]
+
+    starters = {
+        "Padrón Romeo Sebastián", "Morales Alejandro", "Flores Rolando Daniel",
+        "Pérez Axel Oswaldo", "García Tito Ian", "Sánchez Noé de Jesús",
+        "Villaseñor Gael Ronaldo", "Martínez Francisco", "Hernández Arturo Daniel",
+        "Araujo Luis Ángel", "De La Rosa Heriberto",
+    }
+
+    for full_name, position, minutes, goals in appearances_data:
+        player = get_or_create_player(db, full_name, position=position)
+        appearance = Appearance(
+            player_id=player.id,
+            match_id=match.id,
+            minutes_played=minutes,
+            started=full_name in starters,
+            goals=goals,
+        )
+        db.add(appearance)
+
+
+def main():
+    init_db()
+    db = SessionLocal()
+    try:
+        seed_j1(db)
+        seed_j2(db)
+        db.commit()
+        print("Carga completa: J-1 y J-2 cargados con datos reales del informe arbitral FMF.")
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+if __name__ == "__main__":
+    main()

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class RankingEntry(BaseModel):
     player_id: int
     full_name: str
+    jersey_number: int | None
     position: str | None
     category: str | None
     matches_played: int

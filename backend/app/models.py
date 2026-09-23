@@ -15,6 +15,7 @@ class Player(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     full_name = Column(String, nullable=False, index=True)
+    jersey_number = Column(Integer, nullable=True)
     position = Column(String)          # ej. Delantero, Centrocampista
     category = Column(String)          # ej. Cadete, Juvenil, Primer equipo
     birth_date = Column(Date, nullable=True)
